@@ -109,8 +109,72 @@ def ver_mascotas(order="id"):
         print(f"Edad: {m[4]}")
         print(f"Propietario: {m[5]}")
         print("----------------------")
-
         
+# Buscar una mascota por su nombre
+def buscar_mascota():
+    nombre = input("Nombre a buscar: ").strip()
+
+    if not nombre:
+        print("Debe ingresar un nombre")
+        return
+
+    cursor.execute("""
+        SELECT * FROM mascotas
+        WHERE nombre LIKE ?
+    """, (f"%{nombre}%",))
+
+    resultados = cursor.fetchall()
+
+    if not resultados:
+        print("No se encontraron mascotas")
+        return
+
+    for r in resultados:
+        print(f"""
+ID: {r[0]}
+Nombre: {r[1]}
+Especie: {r[2]}
+Raza: {r[3]}
+Edad: {r[4]}
+Propietario: {r[5]}
+""")
+
+# Modificar los datos de una mascota existente
+def modificar_mascota():
+    try:
+        id_m = int(input("ID de mascota: "))
+    except ValueError:
+        print("ID invalido")
+        return
+
+    cursor.execute("SELECT * FROM mascotas WHERE id=?", (id_m,))
+
+    if cursor.fetchone() is None:
+        print("No existe esa mascota")
+        return
+
+    nombre = input("Nuevo nombre: ").strip()
+    especie = input("Nueva especie: ").strip()
+    raza = input("Nueva raza: ").strip()
+    propietario = input("Nuevo propietario: ").strip()
+
+    try:
+        edad = int(input("Nueva edad: "))
+        if edad < 0 or edad > 30:
+            print("Edad invalida")
+            return
+    except ValueError:
+        print("Edad invalida")
+        return
+
+    cursor.execute("""
+        UPDATE mascotas
+        SET nombre=?, especie=?, raza=?, edad=?, propietario=?
+        WHERE id=?
+    """, (nombre, especie, raza, edad, propietario, id_m))
+
+    conn.commit()
+    print("Mascota actualizada")     
         
 # Función para eliminar una mascota y sus servicios asociados
 def eliminar_mascota():
@@ -125,7 +189,7 @@ def eliminar_mascota():
     if cursor.fetchone() is None:
         print("No existe esa mascota")
         return
-
+      
     confirmar = input("¿Eliminar mascota? (s/n): ").lower()
 
     if confirmar != "s":
@@ -234,7 +298,6 @@ def ver_historial_mascota():
         print(f"Servicio: {d[1]}")
         print(f"Fecha: {d[2]}")
         print("----------------")
-
 
 #Extraer datos del csv
 def exportar_csv():
